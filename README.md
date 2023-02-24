@@ -2,6 +2,9 @@
 
 Tools to assist in the management of data for the Nebraska Crop Testing Program (NCTP)
 
+### API Token:
+Get the variety testing API token, create a config.json in the root of this project and add the field  `{ "api_token": "asdgjkbq34tidfgi4t..." }`
+
 ### Usage
 
 ```
