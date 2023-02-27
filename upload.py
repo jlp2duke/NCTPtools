@@ -1,6 +1,7 @@
 from os.path import join, exists
 from os import listdir
 import json
+from datetime import date
 
 
 def __write_id_to_results(results_dir_path, key, id):
@@ -18,7 +19,7 @@ def __write_variety_id_to_results(results_dir_path, variety_name, id):
             for result_file in listdir(fips_path := join(site_type_path, fips)):
                 with open(path := join(fips_path, result_file), 'r') as result_file:
                     payload = json.load(result_file)
-                    if payload.get('name') != variety_name:
+                    if payload.get('name').strip() != variety_name.strip():
                         continue
                     payload['variety_id'] = id
                 with open(path, 'w') as result_file:
@@ -36,12 +37,12 @@ def sites(cli):
                         print(f"ID already assigned. Skipping {path}.")
                     continue
                 try:
-                    cli.client.site.delete(payload.get('id'))
+                    resp = cli.client.site.delete(payload.get('id'))
                 except Exception as e:
-                    cli.write_to_manifest("DELETE_EXCEPTION", path, e)
-                    continue
+                    pass
                 del(payload['id'])
             payload['harvest_year_pub_id'] = cli.args.year_id
+            payload['published_at'] = str(date.today())
             try:
                 resp = cli.client.site.store(payload)
             except Exception as e:
@@ -73,22 +74,20 @@ def varieties(cli):
                     print(f"ID already assigned. Skipping {path}.")
                 continue
             try:
-                resp = cli.client.variety.delete(payload.get('id'))
-            except Exception as e:
-                cli.write_to_manifest("DELETE_EXCEPTION", path, e)
-                continue
-            if resp.json().get('success'):
-                cli.write_to_manifest("DELETE_SUCCEEDED", path)
-            else:
-                cli.write_to_manifest("DELETE_FAILED", path)
+                cli.client.variety.delete(payload.get('id'))
+            except Exception:
+                pass
             del(payload['id'])
         payload['crop_harvest_year_publication_id'] = cli.args.year_id
         payload['aquisition_year'] = cli.args.year
+        payload['published_at'] = str(date.today())
+
         try:
             resp = cli.client.variety.store(payload)
         except Exception as e:
             cli.write_to_manifest("WRITE_EXCEPTION", path, e)
             continue
+
         id = resp.json().get('id')
         if id is None:
             cli.write_to_manifest("WRITE_FAILED", path,
@@ -118,8 +117,7 @@ def results(cli):
                     try:
                         cli.client.results.delete(payload.get('id'))
                     except Exception as e:
-                        cli.write_to_manifest("DELETE_EXCEPTION", path, e)
-                        continue
+                        pass
                     del(payload['id'])
                 if payload.get('trial_site_id') is None or payload.get('variety_id') is None:
                     cli.write_to_manifest("WRITE_IGNORED",

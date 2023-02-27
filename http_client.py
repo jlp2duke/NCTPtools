@@ -86,7 +86,7 @@ class VarietyTestingHttpClient:
         self.__url = url
         self.config = config
         try:
-            token = config['token']
+            token = config['api_token']
         except KeyError:
             exit("Your config.json must have an api token")
         self.endpoints = self.__build_clients(token, loud)

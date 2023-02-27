@@ -4,6 +4,7 @@ import csv
 import json
 from http_client import *
 from shutil import rmtree
+import datetime as dt
 
 
 SUMMARY_COLS = ["mean","lsd","cv","stderr","reps"]
@@ -15,9 +16,9 @@ def make_dir(path):
     mkdir(path)
 
 
-def sites_payloads(args):
-    sites_inpath = join(args.inpath, "trial_sites.csv")
-    sites_outpath = join(args.outpath,'trial_sites')
+def sites_payloads(cli):
+    sites_inpath = join(cli.args.inpath, "trial_sites.csv")
+    sites_outpath = join(cli.args.outpath,'trial_sites')
     assert exists(sites_inpath)
     make_dir(sites_outpath)
     
@@ -48,24 +49,25 @@ def sites_payloads(args):
                 json.dump(row, outfile)
 
 
-def variety_payloads(args):
-    variety_path = join(args.inpath, "characteristics.csv")
-    varieties_outpath = join(args.outpath, "varieties")
+def variety_payloads(cli):
+    variety_path = join(cli.args.inpath, "characteristics.csv")
+    varieties_outpath = join(cli.args.outpath, "varieties")
     make_dir(varieties_outpath)
     file_obj = open(variety_path, 'r')
     for i,row in enumerate(csv.DictReader(file_obj)):
         # varieties[row['name']]
+        row["published_at"] = str(dt.date.today())
         with open(join(varieties_outpath, f"{i}.json"), 'w') as outfile:
             json.dump(row, outfile)
 
 
-def results_payloads(args):
-    results_base_outpath = join(args.outpath, "results")
-    sites_outpath = join(args.outpath,'trial_sites')
+def results_payloads(cli):
+    results_base_outpath = join(cli.args.outpath, "results")
+    sites_outpath = join(cli.args.outpath,'trial_sites')
     make_dir(results_base_outpath)
     for site_type in ['irrigated', 'rainfed', 'intensive_management']:
         results_outpath = join(results_base_outpath, site_type)
-        results_base_inpath = join(args.inpath, site_type)
+        results_base_inpath = join(cli.args.inpath, site_type)
         mkdir(results_outpath)
         for fips_csv in listdir(results_base_inpath):
             inpath = join(results_base_inpath, fips_csv)
@@ -98,10 +100,10 @@ def results_payloads(args):
                     json.dump(sites_json, site_json_file)
 
 
-def all_payloads(args):
-    make_dir(args.outpath)
-    sites_payloads(args)
-    variety_payloads(args)
-    results_payloads(args)
+def all_payloads(cli):
+    make_dir(cli.args.outpath)
+    sites_payloads(cli)
+    variety_payloads(cli)
+    results_payloads(cli)
 
     

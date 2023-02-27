@@ -3,7 +3,8 @@ import pathlib
 from http_client import * 
 from upload import all, sites, varieties, results
 from payloads import all_payloads
-from os.path import join
+from os.path import join, exists
+from os import remove
 
 
 class UploadAction(argparse.Action):
@@ -32,10 +33,11 @@ class Cli:
     def __init__(self):
         self.__parser = self.__define_parser()
         self.args = self.__parser.parse_args()
+        self.__load_config()
         if hasattr(self.args, 'upload'):
-            self.__set_client_fetch_year()
+            self.client = VarietyTestingHttpClient(self.args.domain,self.config,self.args.loud)
+            self.__fetch_year()
             self.__open_and_set_manifest()
-        self.config = self.__load_config()
 
     def run(self):
         self.args.op(self)
@@ -48,8 +50,7 @@ class Cli:
         with open('config.json', 'r') as config_file:
             self.config = json.load(config_file)
 
-    def __set_client_fetch_year(self):
-        self.client = VarietyTestingHttpClient(self.args.domain,self.args.loud)
+    def __fetch_year(self):
         year_id = self.client.get_year_id(self.args.year)        
         if year_id is None:
             print(f"\n> Have you created the harvest year publication?")
@@ -57,7 +58,9 @@ class Cli:
         setattr(self.args, 'year_id', year_id)
 
     def __open_and_set_manifest(self):
-        self.manifest = open(join(self.args.inpath, 'manifest.csv'), 'a')
+        if exists(path:=join(self.args.inpath, 'manifest.csv')):
+            remove(path)
+        self.manifest = open(path, 'w')
 
     def __del__(self):
         if hasattr(self, 'manifest'):
@@ -79,7 +82,7 @@ class Cli:
         upload_parser = command_subparsers.add_parser('upload', help='Upload data to a variety testing environment')
         upload_parser.set_defaults(upload=True)
         upload_parser.add_argument("-i", "--inpath", help="Path to json payloads", type=pathlib.Path, required=True)
-        upload_parser.add_argument('-y', '--year', help="The harvest year for these payloads", nargs=1, type=int)
+        upload_parser.add_argument('-y', '--year', help="The harvest year for these payloads", type=int)
         upload_parser.add_argument('-r', '--rewrite', help="Rewrite i.e. delete existing and write again", action='store_true')
 
         upload_types = upload_parser.add_subparsers()
