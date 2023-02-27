@@ -83,6 +83,7 @@ def varieties(cli):
                 cli.write_to_manifest("DELETE_FAILED", path)
             del(payload['id'])
         payload['crop_harvest_year_publication_id'] = cli.args.year_id
+        payload['aquisition_year'] = cli.args.year
         try:
             resp = cli.client.variety.store(payload)
         except Exception as e:
