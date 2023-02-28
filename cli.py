@@ -10,8 +10,10 @@ from os import remove
 class UploadAction(argparse.Action):
     
     env_domain_mappings = {
-        "local":    "http://127.0.0.1:8000/api",
-        "prod":     "https://varietytesting.unl.edu/api"
+        "local":   "http://127.0.0.1:8000/api",
+        "prod":    "https://varietytesting.unl.edu/api",
+        "develop": "https://varietytesting-dev.unl.edu/api",
+        "staging": "https://varietytesting-stage.unl.edu/api"
     }
 
     def __call__(self, parser, namespace, values, option_string=None):
