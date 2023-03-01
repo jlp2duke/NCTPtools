@@ -31,20 +31,20 @@ def sites(cli):
         for fips_json in listdir(site_type_path := join(sites_basepath, site_type)):
             with open((path := join(site_type_path, fips_json)), 'r+') as sites_file:
                 payload = json.load(sites_file)
-            if payload.get('id') is not None:
-                if not cli.args.rewrite:
-                    if cli.args.loud:
-                        print(f"ID already assigned. Skipping {path}.")
-                    continue
+            if payload.get('id') is not None and cli.args.rewrite:
                 try:
                     resp = cli.client.site.delete(payload.get('id'))
                 except Exception as e:
                     pass
                 del(payload['id'])
             payload['harvest_year_pub_id'] = cli.args.year_id
-            payload['published_at'] = str(date.today())
+            if payload.get('published_at') in ['', None]:
+                payload['published_at'] = str(date.today())
             try:
-                resp = cli.client.site.store(payload)
+                if payload.get('id') is None:
+                    resp = cli.client.site.store(payload)
+                else:
+                    resp = cli.client.site.store(payload.get('id'), payload)
             except Exception as e:
                 cli.write_to_manifest("WRITE_EXCEPTION", path, e)
                 continue
@@ -68,22 +68,24 @@ def varieties(cli):
     for variety_file in listdir((varieties_basepath := join(cli.args.inpath, 'varieties'))):
         with open((path := join(varieties_basepath, variety_file)), 'r+') as varieties_file:
             payload = json.load(varieties_file)
-        if payload.get('id') is not None:
-            if not cli.args.rewrite:
-                if cli.args.loud:
-                    print(f"ID already assigned. Skipping {path}.")
-                continue
+        if payload.get('id') is not None and cli.args.rewrite:
             try:
                 cli.client.variety.delete(payload.get('id'))
             except Exception:
                 pass
             del(payload['id'])
+        
         payload['crop_harvest_year_publication_id'] = cli.args.year_id
         payload['aquisition_year'] = cli.args.year
-        payload['published_at'] = str(date.today())
+        
+        if payload.get('published_at') in ['', None]:
+            payload['published_at'] = str(date.today())
 
         try:
-            resp = cli.client.variety.store(payload)
+            if payload.get('id') is None:
+                resp = cli.client.variety.store(payload)
+            else:
+                resp = cli.client.variety.update(payload.get('id'), payload)
         except Exception as e:
             cli.write_to_manifest("WRITE_EXCEPTION", path, e)
             continue
@@ -109,11 +111,7 @@ def results(cli):
                 with open((path := join(payload_filepath, results_filename)), 'r+') as resuts_file:
                     payload = json.load(resuts_file)
 
-                if payload.get('id') is not None:
-                    if not cli.args.rewrite:
-                        if cli.args.loud:
-                            print(f"ID already assigned. Skipping {path}.")
-                        continue
+                if payload.get('id') is not None and cli.args.rewrite:
                     try:
                         cli.client.results.delete(payload.get('id'))
                     except Exception as e:
@@ -125,7 +123,10 @@ def results(cli):
                     continue
 
                 try:
-                    resp = cli.client.results.store(payload)
+                    if payload.get('id') is None:
+                        resp = cli.client.results.store(payload)
+                    else:
+                        resp = cli.client.results.update(payload.get('id'), payload)
                 except Exception as e:
                     cli.write_to_manifest("WRITE_EXCEPTION", path, e)
                     continue
