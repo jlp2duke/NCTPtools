@@ -5,29 +5,22 @@ from upload import all, sites, varieties, results
 from payloads import all_payloads
 from os.path import join, exists
 from os import remove
+from datetime import datetime as dt
+
+
+def config(key):
+    with open('config.json', 'r') as config_file:
+        return json.load(config_file).get(key, None)
 
 
 class UploadAction(argparse.Action):
-    
-    env_domain_mappings = {
-        "local":   "http://127.0.0.1:8000/api",
-        "prod":    "https://varietytesting.unl.edu/api",
-        "develop": "https://varietytesting-dev.unl.edu/api",
-        "staging": "https://varietytesting-stage.unl.edu/api"
-    }
+
+    def __init__(self, option_strings, dest, **kwargs):
+        self.domain_mappings = config('domain_mappings')
+        super().__init__(option_strings, dest, 1, None, kwargs.get('default', 'local'), None, self.domain_mappings.keys(), True, "Prepare for or upload to the specified environment")
 
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, 'domain', self.env_domain_mappings.get(values[0]))
-
-    @staticmethod
-    def arg_config():
-        return {
-            "help": "Upload the data to the provided environment",
-            "nargs": 1,
-            "choices": UploadAction.env_domain_mappings.keys(),
-            "action": UploadAction,
-            "default": "local"
-        }
+        setattr(namespace, 'domain', self.domain_mappings.get(values[0]))
 
 
 class Cli:
