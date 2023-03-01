@@ -20,11 +20,16 @@ class VarietyTestingEndpoint:
         self.request_params['headers']['Authorization'] = f"Bearer {token}"
     
     def show(self, id):
-        resp = requests.get(**self.__params(self.url + "/" + str(id)))
+        resp = requests.get(**self.__params(self.url + f"/{id}"))
         self.__log(resp)
 
     def store(self, payload):
         resp = requests.post(**self.__params(self.url), json=payload)
+        self.__log(resp)
+        return resp
+    
+    def update(self, id, payload):
+        resp = requests.put(**self.__params(self.url + f"/{id}"), json=payload)
         self.__log(resp)
         return resp
 
@@ -34,7 +39,7 @@ class VarietyTestingEndpoint:
         return resp
 
     def delete(self, id):
-        resp = requests.delete(**self.__params(self.url + "/" + str(id)))
+        resp = requests.delete(**self.__params(self.url + "/{id}"))
         self.__log(resp)
         return resp
 
