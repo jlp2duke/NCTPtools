@@ -35,6 +35,9 @@ actions:
 
 
 ### Payloads Subcommand
+
+Generates a directory of json objects that are use as the POST/PUT request bodies of your upload.
+
 ```
 $ python cli.py -e prod -l payloads -h
 usage: cli.py payloads [-h] -i INPATH -o OUTPATH
@@ -47,6 +50,9 @@ options:
                         Location to dump the payloads
 ```
 
+## 3. Upload your payloads
+
+Uploads the payloads generated from the Payloads action.
 
 ### Upload Subcommand
 ```
@@ -64,21 +70,38 @@ options:
   -r, --rewrite         Rewrite i.e. delete existing and write again
 ```
 
-_*The rewrite is dangerous and I would avoid using it but its useful for development.*_
-
-## Updating Variety Characteristics from Previous Years
-
-Adding the previous year's id to the characteristic payloads will update those older records rather than creating new ones and will ensure that all newly added performance results will reference the existing records.
+_*The rewrite option is dangerous and I would avoid using it if not developing this tool.*_
 
 ## If you have to make corrections after an upload
 If something was already uploaded and you want to make a correction, verify that the corrected record has an `id` and re-run the script. 
 
 If any of the request payloads have an id, then the upload request will be a `PUT` rather than a `POST` so will not create a new record but instead update the existing one.
 
+## Updating Variety Characteristics from Previous Years Rather than creating new ones
+
+Adding the previous year's id to the characteristic payloads will update those older records rather than creating new ones and will ensure that all newly added performance results will reference the existing records.
+
+Simply find a variety and add an "id" field with the id:
+
+```
+{
+  "id": 123, <~added manually
+  "published_at": "2023-03-01",
+  "name": "Amplify SF",
+  "brand": "PlainsGold",
+  "origin": "CSU/CWRF",
+  "family": "",
+  "alternate_name": "",
+  "ne_variety": "0",
+  "maturity": "3",
+  ...
+}
+```
+
 ## Logging / Manifest
 
-- **Manifest**: Lists data that failed to be uploaded. You'll want to make necessary corrections and rerun it. It appears in the root of the output dir and is called manifest.csv.
-- **Capturing Logs**: If you want/need logs then store the output of the command in a log file. Do this by appending ` > log.txt` to the command. `python cli.py [...] upload > log.txt`
+- **Manifest**: Generated everytime you run the upload action. The manifest is located in the root of the payloads directory and lists data that failed to be uploaded. After uploading, you'll want to check through it, make any corrections and then rerun it.
+- **Capturing Logs**: If you want/need logs then store the output of the command in a log file. Do this by appending ` > log.txt` to the command. `python cli.py [...] upload > log.txt && less log.txt`
 
 
 # Notes on Input File Structure and Content
