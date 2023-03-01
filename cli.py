@@ -53,7 +53,7 @@ class Cli:
         setattr(self.args, 'year_id', year_id)
 
     def __open_and_set_manifest(self):
-        if exists(path:=join(self.args.inpath, 'manifest.csv')):
+        if exists(path:=join(self.args.inpath, f'manifest_{dt.today().isoformat()}.csv')):
             remove(path)
         self.manifest = open(path, 'w')
 
